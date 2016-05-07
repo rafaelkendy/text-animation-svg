@@ -55,3 +55,41 @@ fromSelect.addEventListener('change', function(){
   from = this.value;
   input.focus();
 });
+
+gui.appendChild(document.createElement('br'));
+gui.appendChild(document.createElement('br'));
+
+var typeSelect = document.createElement('select');
+typeSelect.style.width = '100%';
+gui.appendChild(typeSelect);
+
+var types = ['polygon', 'circle'];
+for (i = 0; i < types.length; i++) {
+  option = document.createElement('option');
+  option.value = types[i];
+  option.innerHTML = types[i];
+  typeSelect.appendChild(option);
+}
+
+typeSelect.addEventListener('change', function(){
+  var c = svg.children, p, w, h, w1, w2, h1, h2, q1, q2;
+  type = this.value;
+  for (p = 0; p < c.length; p++) {
+    if (type == 'circle') {
+      w1 = w2 = h1 = h2 = Math.random() * (c[p].width / 2);
+      q1 = w1 * 0.06;
+      q2 = w1 * 0.94;
+      w = h = w1 * 2;
+    } else {
+      w1 = Math.random() * c[p].width;
+      w2 = Math.random() * c[p].width;
+      h1 = Math.random() * c[p].height;
+      h2 = Math.random() * c[p].height;
+      w = c[p].width;
+      h = c[p].height;
+      q1 = q2 = 0;
+    }
+    c[p].setAttribute('d', 'M 0 ' + h1 + ' q ' + q1 + ' ' + (-q2) + ' ' + w1 + ' ' + (-h1) + ' q ' + q2 + ' ' + q1 + ' ' + (w - w1) + ' ' + h2 + ' q ' + (-q1) + ' ' + q2 + ' ' + (-w2) + ' ' + (h - h2) + ' q ' + (-q2) + ' ' + (-q1) + ' ' + (w2 - w) + ' ' + (h1 - h));
+  }
+  input.focus();
+});
