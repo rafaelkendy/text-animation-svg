@@ -47,6 +47,19 @@ function createPath (target, width, height, color) {
       p2 = Math.round(Math.random() * height),
       p3 = Math.round(Math.random() * width),
       p4 = Math.round(Math.random() * height);
+
+  switch (color) {
+    case 'orange':
+      color = '#f90';
+      break;
+    case 'greyscale':
+      color = getRandomColor(true);
+      break;
+    case 'random':
+      color = getRandomColor();
+      break;
+  }
+
   path.setAttribute('fill', color);
   path.setAttribute('d', 'M ' + p1 + ' 0 L ' + width + ' ' + p2 + ' ' + p3 + ' ' + height +' 0 ' + p4 + ' Z');
   return path;
@@ -65,6 +78,9 @@ function findPath(x, y) {
 
 input.addEventListener('keyup', typing);
 
+var color = 'orange',
+    from = 'center';
+
 function typing(e){
   if (e.type == "keyup" && typeof si != 'undefined') clearTimeout(si); // Remove example
   var oldWidth = 0,
@@ -74,6 +90,8 @@ function typing(e){
       x, y,
       shapeW = 10,
       shapeH = 10,
+      startX = stageW/2,
+      startY = stageH/2,
       offsetX = 0,
       newPath,
       transition,
@@ -101,12 +119,24 @@ function typing(e){
         if ((x && x%8 == 0) && (y && y%8 == 0)) {
 
           if (!findPath(x,y)) {
-            newPath = createPath(svgNS, shapeW, shapeH, "#f90");
+            newPath = createPath(svgNS, shapeW, shapeH, color);
             svg.appendChild(newPath);
             transition = 'all ' + (Math.random() * 500 + 500) + 'ms cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+            if (from == 'border') {
+              switch (Math.floor(Math.random() * 2)) {
+                case 1:
+                  startX = Math.round(Math.random()) * stageW;
+                  startY = Math.random() * stageH;
+                  break;
+                case 2:
+                  startX = Math.random() * stageW;
+                  startY = Math.round(Math.random()) * stageH;
+                  break;
+              }
+            }
             newPath.id = x + '-' + y;
             newPath.style.opacity = 0;
-            newPath.style.transform = 'translate(' + stageW/2 + 'px, ' + stageH/2 + 'px)';
+            newPath.style.transform = 'translate(' + startX + 'px, ' + startY + 'px)';
             newPath.style.WebkitTransition = transition;
             newPath.style.transition = transition;
           } else {
@@ -164,8 +194,13 @@ function typing(e){
   }
 }
 
-window.addEventListener('click', function(){
-  input.focus();
+function getRandomColor(greyscale) {
+  var c = ((1 << (greyscale ? 8 : 24)) * Math.random() | 0).toString(16);
+  return "#" + (greyscale ? c + c + c : c);
+}
+
+window.addEventListener('click', function(e){
+  if (e.target != colorSelect && e.target != fromSelect) input.focus();
 });
 
 // Example
