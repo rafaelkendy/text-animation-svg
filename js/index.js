@@ -41,12 +41,8 @@ svg.setAttribute('height', stageH + 'px');
 svg.setAttribute('viewBox', '0 0 ' + stageW + ' ' + stageH);
 container.appendChild(svg);
 
-function createPath (target, width, height, color) {
-  var path = document.createElementNS(target, 'path'),
-      p1 = Math.round(Math.random() * width),
-      p2 = Math.round(Math.random() * height),
-      p3 = Math.round(Math.random() * width),
-      p4 = Math.round(Math.random() * height);
+function createPath (target, type, width, height, color) {
+  var path = document.createElementNS(target, 'path');
 
   switch (color) {
     case 'orange':
@@ -59,9 +55,23 @@ function createPath (target, width, height, color) {
       color = getRandomColor();
       break;
   }
-
   path.setAttribute('fill', color);
-  path.setAttribute('d', 'M ' + p1 + ' 0 L ' + width + ' ' + p2 + ' ' + p3 + ' ' + height +' 0 ' + p4 + ' Z');
+
+  if (type == 'circle') {
+    w1 = w2 = h1 = h2 = Math.random() * (width / 2);
+    q1 = w1 * 0.06;
+    q2 = w1 * 0.94;
+    w = h = w1 * 2;
+  } else {
+    w1 = Math.random() * width;
+    w2 = Math.random() * width;
+    h1 = Math.random() * height;
+    h2 = Math.random() * height;
+    w = width;
+    h = height;
+    q1 = q2 = 0;
+  }
+  path.setAttribute('d', 'M 0 ' + h1 + ' q ' + q1 + ' ' + (-q2) + ' ' + w1 + ' ' + (-h1) + ' q ' + q2 + ' ' + q1 + ' ' + (w - w1) + ' ' + h2 + ' q ' + (-q1) + ' ' + q2 + ' ' + (-w2) + ' ' + (h - h2) + ' q ' + (-q2) + ' ' + (-q1) + ' ' + (w2 - w) + ' ' + (h1 - h));
   return path;
 }
 
@@ -79,7 +89,8 @@ function findPath(x, y) {
 input.addEventListener('keyup', typing);
 
 var color = 'orange',
-    from = 'center';
+    from = 'center',
+    type = 'polygon';
 
 function typing(e){
   if (e.type == "keyup" && typeof si != 'undefined') clearTimeout(si); // Remove example
@@ -119,7 +130,7 @@ function typing(e){
         if ((x && x%8 == 0) && (y && y%8 == 0)) {
 
           if (!findPath(x,y)) {
-            newPath = createPath(svgNS, shapeW, shapeH, color);
+            newPath = createPath(svgNS, type, shapeW, shapeH, color);
             svg.appendChild(newPath);
             transition = 'all ' + (Math.random() * 500 + 500) + 'ms cubic-bezier(0.68, -0.55, 0.265, 1.55)';
             if (from == 'border') {
@@ -135,6 +146,8 @@ function typing(e){
               }
             }
             newPath.id = x + '-' + y;
+            newPath.width = shapeW;
+            newPath.height = shapeH;
             newPath.style.opacity = 0;
             newPath.style.transform = 'translate(' + startX + 'px, ' + startY + 'px)';
             newPath.style.WebkitTransition = transition;
@@ -200,7 +213,7 @@ function getRandomColor(greyscale) {
 }
 
 window.addEventListener('click', function(e){
-  if (e.target != colorSelect && e.target != fromSelect) input.focus();
+  if (e.target != colorSelect && e.target != fromSelect && e.target != typeSelect) input.focus();
 });
 
 // Example
