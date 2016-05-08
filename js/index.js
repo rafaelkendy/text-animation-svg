@@ -217,7 +217,7 @@ window.addEventListener('click', function(e){
 });
 
 // Example
-var myString = "Type".split(""),
+var myString = "Typo".split(""),
     s = 0,
     si = setInterval(function(){
       if (s < myString.length) {
@@ -225,5 +225,14 @@ var myString = "Type".split(""),
         input.value += myString[s];
         s++;
         typing(e);
+      } else {
+        var e = {keyCode: 8};
+        input.value = 'Typ';
+        s--;
+        myString[s] = 'e';
+        typing(e);
       }
-    }, 1000);
+      if (input.value == 'Type') {
+        clearInterval(si);
+      }
+    }, 1200);
