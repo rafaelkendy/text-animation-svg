@@ -121,7 +121,7 @@ function createPath (target, type, width, height, color) {
       break;
   }
   path.setAttribute('fill', color);
-  path.setAttribute('filter', 'url(#lightText)');
+  if (light == 'true') path.setAttribute('filter', 'url(#lightText)');
 
   if (type == 'circle') {
     w1 = w2 = h1 = h2 = Math.random() * (width / 2);
@@ -156,7 +156,10 @@ input.addEventListener('keyup', typing);
 
 var color = 'orange',
     from = 'center',
-    type = 'polygon';
+    type = 'polygon',
+    dropShadow = 'true',
+    light = 'true',
+    spotlight = 'true';
 
 function typing(e){
   if (e.type == "keyup" && typeof si != 'undefined') clearTimeout(si); // Remove example
@@ -276,7 +279,7 @@ function typing(e){
 var div = document.createElement('div');
 div.style.position = 'fixed';
 div.style.top = div.style.right = div.style.bottom = div.style.left = 0;
-div.style.background = 'radial-gradient(circle at 0 0, transparent, black)';
+div.style.background = 'radial-gradient(circle at ' + (stageW / 2) + 'px ' + (stageH / 2) + 'px, rgba(255,255,255,0), rgba(0,0,0,1))';
 document.body.appendChild(div);
 
 function getRandomColor(greyscale) {
@@ -285,7 +288,13 @@ function getRandomColor(greyscale) {
 }
 
 window.addEventListener('click', function(e){
-  if (e.target != colorSelect && e.target != fromSelect && e.target != typeSelect) input.focus();
+  var guiSelects = gui.getElementsByTagName('select');
+  for (var g = 0; g < guiSelects.length; g++) {
+    if (e.target == guiSelects[g]) {
+      return false;
+    }
+  }
+  input.focus();
 });
 
 window.addEventListener('mousemove', function(e){
@@ -296,8 +305,7 @@ window.addEventListener('mousemove', function(e){
   feOffset.setAttribute('dx', dx);
   feOffset.setAttribute('dy', dy);
   feGaussianBlur.setAttribute('stdDeviation', Math.max(Math.abs(dx),Math.abs(dy)));
-  // feColorMatrix.setAttribute('values', '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ' + (Math.abs(Math.max(Math.abs(dx),Math.abs(dy)) - 10) / 4) + ' 0');
-  div.style.background = 'radial-gradient(circle at ' + e.clientX + 'px ' + e.clientY + 'px, rgba(0,0,0,0), rgba(0,0,0,1))';
+  div.style.background = 'radial-gradient(circle at ' + e.clientX + 'px ' + e.clientY + 'px, rgba(255,255,255,0), rgba(0,0,0,1))';
 });
 
 // Example
