@@ -1,18 +1,27 @@
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+function not(v) {
+  if (v === null) return true;
+  return typeof v === "undefined";
+}
+
+function getRandomColor(greyscale) {
+  var c = ((1 << (greyscale ? 8 : 24)) * Math.random() | 0).toString(16);
+  return "#" + (greyscale ? c + c + c : c);
+}
+
 var stageW = window.innerWidth;
 var stageH = window.innerHeight;
 var textSize = 200;
 var canvasH = textSize + 30;
 
-var canvas = document.createElement('canvas');
-canvas.width = stageW;
-canvas.height = canvasH;
-canvas.style.display = 'none';
-document.body.appendChild(canvas);
-
-var ctx = canvas.getContext("2d", {alpha: false});
-
 var input = document.createElement('input');
 input.style.opacity = 0;
+input.style.position = 'absolute';
 input.autofocus = true;
 document.body.appendChild(input);
 
@@ -106,42 +115,117 @@ group.id = 'groupText';
 group.setAttribute('filter', 'url(#shadowText)');
 svg.appendChild(group);
 
-function createPath (target, type, width, height, color) {
-  var path = document.createElementNS(target, 'path');
+var Path = function() {
+  function Path(target, type, width, height, color){
+    _classCallCheck(this, Path);
 
-  switch (color) {
-    case 'orange':
-      color = '#f90';
-      break;
-    case 'greyscale':
-      color = getRandomColor(true);
-      break;
-    case 'random':
-      color = getRandomColor();
-      break;
+    if (not(target)) {
+      console.log('Path: target is missing.');
+      return;
+    }
+    if (not(type)) type = 'polygon';
+    if (not(width)) width = 10;
+    if (not(height)) height = 10;
+    if (not(color)) color = 'orange';
+
+    this.path = document.createElementNS(target, 'path');
+
+    switch (color) {
+      case 'orange':
+        color = '#f90';
+        break;
+      case 'greyscale':
+        color = getRandomColor(true);
+        break;
+      case 'random':
+        color = getRandomColor();
+        break;
+    }
+
+    if (type == 'circle') {
+      w1 = w2 = h1 = h2 = Math.random() * (width / 2);
+      q1 = w1 * 0.06;
+      q2 = w1 * 0.94;
+      w = h = w1 * 2;
+    } else {
+      w1 = Math.random() * width;
+      w2 = Math.random() * width;
+      h1 = Math.random() * height;
+      h2 = Math.random() * height;
+      w = width;
+      h = height;
+      q1 = q2 = 0;
+    }
+
+    this.path.setAttribute('fill', color);
+    this.path.setAttribute('d', 'M 0 ' + h1 + ' q ' + q1 + ' ' + (-q2) + ' ' + w1 + ' ' + (-h1) + ' q ' + q2 + ' ' + q1 + ' ' + (w - w1) + ' ' + h2 + ' q ' + (-q1) + ' ' + q2 + ' ' + (-w2) + ' ' + (h - h2) + ' q ' + (-q2) + ' ' + (-q1) + ' ' + (w2 - w) + ' ' + (h1 - h));
+
+    var transition = 'all ' + (Math.random() * 500 + 500) + 'ms cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+    this.path.style.WebkitTransition = transition;
+    this.path.style.transition = transition;
+  
+    return this.path;
   }
-  path.setAttribute('fill', color);
-  if (light == 'true') path.setAttribute('filter', 'url(#lightText)');
 
-  if (type == 'circle') {
-    w1 = w2 = h1 = h2 = Math.random() * (width / 2);
-    q1 = w1 * 0.06;
-    q2 = w1 * 0.94;
-    w = h = w1 * 2;
-  } else {
-    w1 = Math.random() * width;
-    w2 = Math.random() * width;
-    h1 = Math.random() * height;
-    h2 = Math.random() * height;
-    w = width;
-    h = height;
-    q1 = q2 = 0;
+  Path.prototype.light = function light(id) {
+    if (not(id)) {
+      console.log('Path.light: id is missing.');
+      return;
+    }
+    this.path.setAttribute('filter', 'url(#' + id + ')');
+  };
+
+  return Path;
+}();
+
+var Canvas = function(){
+  function Canvas(width, height) {
+    _classCallCheck(this, Canvas);
+
+    if (not(width)) width = window.innerWidth;
+    if (not(height)) height = window.innerHeight;
+
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.canvas.style.display = 'none';
+    document.body.appendChild(this.canvas);
+
+    this.ctx = this.canvas.getContext("2d", {alpha: false});
   }
-  path.setAttribute('d', 'M 0 ' + h1 + ' q ' + q1 + ' ' + (-q2) + ' ' + w1 + ' ' + (-h1) + ' q ' + q2 + ' ' + q1 + ' ' + (w - w1) + ' ' + h2 + ' q ' + (-q1) + ' ' + q2 + ' ' + (-w2) + ' ' + (h - h2) + ' q ' + (-q2) + ' ' + (-q1) + ' ' + (w2 - w) + ' ' + (h1 - h));
-  return path;
-}
 
-function findPath(x, y) { 
+  Canvas.prototype.clear = function clear() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  };
+
+  Canvas.prototype.text = function text(string, textSize, font, color, x, y, baseline) {
+    this.clear();
+    if (not(string)) {
+      console.log('Canvas.text: string is missing.');
+      return;
+    }
+    if (not(textSize)) textSize = 100;
+    if (not(font)) font = 'Arial';
+    if (not(color)) color = '#f00';
+    if (not(x)) x = 0;
+    if (not(y)) y = this.canvas.height / 2;
+    if (not(baseline)) baseline = 'middle';
+    this.ctx.font = textSize + "px " + font;
+    this.ctx.fillStyle = color;
+    this.ctx.textBaseline = baseline;
+    this.ctx.fillText(string, x, y);
+
+    this.text.width = this.ctx.measureText(string).width;
+  };
+
+  Canvas.prototype.getData = function getData(){
+    return this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height).data;
+  };
+
+  return Canvas;
+}();
+
+function findPath(x, y) {
   var c = group.children;
   var id = x + '-' + y;
   for (var i = 0; i < c.length; i++) {
@@ -152,7 +236,18 @@ function findPath(x, y) {
   return false;
 }
 
+function movePath(target, x, y){
+  target.style.opacity = Math.random();
+  target.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+}
+
+function removePath(target){
+  group.removeChild(target);
+}
+
 input.addEventListener('keyup', typing);
+
+var canvas = new Canvas(stageW, canvasH);
 
 var color = 'orange',
     from = 'center',
@@ -179,29 +274,24 @@ function typing(e){
       charStr = String.fromCharCode(key);
 
   if(/[a-z0-9]/i.test(charStr) || ( key == 8 || key == 46 )){
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.font = textSize + "px Arial";
-    ctx.fillStyle = "rgba(255,0,0,1)";
-    ctx.textBaseline = "middle";
-    ctx.fillText(input.value, 0, canvas.height/2);
+    canvas.text(input.value, textSize);
     
-    data = ctx.getImageData(0, 0, stageW, canvasH).data;
-    newWidth = ctx.measureText(input.value).width;
+    data = canvas.getData();
+    newWidth = canvas.text.width;
     offsetX = stageW / 2 - newWidth / 2;
     pixels =[];
 
     for (var i = 0; i < data.length; i += 4) {
 
-      if (data[i] != 0) {
+      if (data[i] !== 0) {
         x = Math.floor((i / 4) % stageW);
         y = Math.floor(Math.floor(i/stageW)/4);
 
-        if ((x && x%8 == 0) && (y && y%8 == 0)) {
+        if ((x && x%8 === 0) && (y && y%8 === 0)) {
 
           if (!findPath(x,y)) {
-            newPath = createPath(svgNS, type, shapeW, shapeH, color);
+            newPath = new Path(svgNS, type, shapeW, shapeH, color);
             group.appendChild(newPath);
-            transition = 'all ' + (Math.random() * 500 + 500) + 'ms cubic-bezier(0.68, -0.55, 0.265, 1.55)';
             if (from == 'border') {
               switch (Math.floor(Math.random() * 2)) {
                 case 1:
@@ -219,18 +309,14 @@ function typing(e){
             newPath.height = shapeH;
             newPath.style.opacity = 0;
             newPath.style.transform = 'translate(' + startX + 'px, ' + startY + 'px)';
-            newPath.style.WebkitTransition = transition;
-            newPath.style.transition = transition;
+
           } else {
             newPath = document.getElementById(x + '-' + y);
           }
 
           pixels.push(x + '-' + y);
           
-          setTimeout(function (target, x, y){
-            target.style.opacity = Math.random();
-            target.style.transform = 'translate(' + (offsetX + x) + 'px, ' + (y - canvasH/2 + stageH/2) + 'px)';
-          }, Math.random()*20, newPath, x, y);
+          setTimeout(movePath, Math.random()*20, newPath, (offsetX + x), (y - canvasH/2 + stageH/2));
           
         }
       }
@@ -238,7 +324,7 @@ function typing(e){
     if( key == 8 || key == 46 ) {
       var c = group.children,
           remove = true,
-          total = c.length
+          total = c.length,
           p = 0,
           a = 0,
           translateX = '',
@@ -267,9 +353,7 @@ function typing(e){
           c[p].style.transition = transition;
           c[p].style.opacity = 0;
           c[p].style.transform = 'translate(' + translateX + ', ' + translateY + 'px)';
-          setTimeout(function(target){
-            group.removeChild(target);
-          },(time+delay), c[p]);
+          setTimeout(removePath,(time+delay), c[p]);
         }
       }
     }
@@ -281,11 +365,6 @@ div.style.position = 'fixed';
 div.style.top = div.style.right = div.style.bottom = div.style.left = 0;
 div.style.background = 'radial-gradient(circle at ' + (stageW / 2) + 'px ' + (stageH / 2) + 'px, rgba(255,255,255,0), rgba(0,0,0,1))';
 document.body.appendChild(div);
-
-function getRandomColor(greyscale) {
-  var c = ((1 << (greyscale ? 8 : 24)) * Math.random() | 0).toString(16);
-  return "#" + (greyscale ? c + c + c : c);
-}
 
 window.addEventListener('click', function(e){
   var guiSelects = gui.getElementsByTagName('select');
@@ -310,15 +389,15 @@ window.addEventListener('mousemove', function(e){
 
 // Example
 var myString = "Typo".split(""),
-    s = 0,
+    s = 0, e,
     si = setInterval(function(){
       if (s < myString.length) {
-        var e = {keyCode: 65};
+        e = {keyCode: 65};
         input.value += myString[s];
         s++;
         typing(e);
       } else {
-        var e = {keyCode: 8};
+        e = {keyCode: 8};
         input.value = 'Typ';
         s--;
         myString[s] = 'e';
