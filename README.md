@@ -5,6 +5,9 @@ Check here:
 https://codepen.io/rafaelkendy/pen/PNXyEw
 
 GUI:
-- Change color of the particles.
-- Change the starting point of the animation.
-- Change the shape between polygon or circle.
+- Color of the particles.
+- Starting point of the animation.
+- Polygon or circle.
+- Drop Shadow.
+- Cast light.
+- Spotlight.
