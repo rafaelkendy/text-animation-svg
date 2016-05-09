@@ -41,6 +41,71 @@ svg.setAttribute('height', stageH + 'px');
 svg.setAttribute('viewBox', '0 0 ' + stageW + ' ' + stageH);
 container.appendChild(svg);
 
+var lightText = document.createElementNS(svgNS, 'filter');
+lightText.id = 'lightText';
+svg.appendChild(lightText);
+
+var feDiffuseLighting = document.createElementNS(svgNS, 'feDiffuseLighting');
+feDiffuseLighting.setAttribute('in', 'SourceGraphic');
+feDiffuseLighting.setAttribute('result', 'light');
+feDiffuseLighting.setAttribute('lighting-color', 'white');
+lightText.appendChild(feDiffuseLighting);
+
+var fePointLight = document.createElementNS(svgNS, 'fePointLight');
+fePointLight.setAttribute('x', '0');
+fePointLight.setAttribute('y', '0');
+fePointLight.setAttribute('z', '150');
+feDiffuseLighting.appendChild(fePointLight);
+
+var feComposite = document.createElementNS(svgNS, 'feComposite');
+feComposite.setAttribute('in', 'SourceGraphic');
+feComposite.setAttribute('in2', 'light');
+feComposite.setAttribute('operator', 'arithmetic');
+feComposite.setAttribute('k1', '1');
+feComposite.setAttribute('k2', '0');
+feComposite.setAttribute('k3', '0');
+feComposite.setAttribute('k4', '0');
+lightText.appendChild(feComposite);
+
+var shadowText = document.createElementNS(svgNS, 'filter');
+shadowText.id = 'shadowText';
+shadowText.setAttribute('x', '-200%');
+shadowText.setAttribute('y', '-200%');
+shadowText.setAttribute('width', '400%');
+shadowText.setAttribute('height', '400%');
+svg.appendChild(shadowText);
+
+var feOffset = document.createElementNS(svgNS, 'feOffset');
+feOffset.setAttribute('result', 'offOut');
+feOffset.setAttribute('in', 'SourceGraphic');
+feOffset.setAttribute('dx', '0');
+feOffset.setAttribute('dy', '0');
+shadowText.appendChild(feOffset);
+
+var feColorMatrix = document.createElementNS(svgNS, 'feColorMatrix');
+feColorMatrix.setAttribute('result', 'matrixOut');
+feColorMatrix.setAttribute('in', 'offOut');
+feColorMatrix.setAttribute('type', 'matrix');
+feColorMatrix.setAttribute('values', '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.7 0');
+shadowText.appendChild(feColorMatrix);
+
+var feGaussianBlur = document.createElementNS(svgNS, 'feGaussianBlur');
+feGaussianBlur.setAttribute('result', 'blurOut');
+feGaussianBlur.setAttribute('in', 'matrixOut');
+feGaussianBlur.setAttribute('stdDeviation', '0');
+shadowText.appendChild(feGaussianBlur);
+
+var feBlend = document.createElementNS(svgNS, 'feBlend');
+feBlend.setAttribute('in', 'SourceGraphic');
+feBlend.setAttribute('in2', 'blurOut');
+feBlend.setAttribute('mode', 'normal');
+shadowText.appendChild(feBlend);
+
+var group = document.createElementNS(svgNS, 'g');
+group.id = 'groupText';
+group.setAttribute('filter', 'url(#shadowText)');
+svg.appendChild(group);
+
 function createPath (target, type, width, height, color) {
   var path = document.createElementNS(target, 'path');
 
@@ -56,6 +121,7 @@ function createPath (target, type, width, height, color) {
       break;
   }
   path.setAttribute('fill', color);
+  path.setAttribute('filter', 'url(#lightText)');
 
   if (type == 'circle') {
     w1 = w2 = h1 = h2 = Math.random() * (width / 2);
@@ -76,7 +142,7 @@ function createPath (target, type, width, height, color) {
 }
 
 function findPath(x, y) { 
-  var c = svg.children;
+  var c = group.children;
   var id = x + '-' + y;
   for (var i = 0; i < c.length; i++) {
     if (c[i].id == id) {
@@ -131,7 +197,7 @@ function typing(e){
 
           if (!findPath(x,y)) {
             newPath = createPath(svgNS, type, shapeW, shapeH, color);
-            svg.appendChild(newPath);
+            group.appendChild(newPath);
             transition = 'all ' + (Math.random() * 500 + 500) + 'ms cubic-bezier(0.68, -0.55, 0.265, 1.55)';
             if (from == 'border') {
               switch (Math.floor(Math.random() * 2)) {
@@ -167,7 +233,7 @@ function typing(e){
       }
     }
     if( key == 8 || key == 46 ) {
-      var c = svg.children,
+      var c = group.children,
           remove = true,
           total = c.length
           p = 0,
@@ -199,13 +265,19 @@ function typing(e){
           c[p].style.opacity = 0;
           c[p].style.transform = 'translate(' + translateX + ', ' + translateY + 'px)';
           setTimeout(function(target){
-            svg.removeChild(target);
+            group.removeChild(target);
           },(time+delay), c[p]);
         }
       }
     }
   }
 }
+
+var div = document.createElement('div');
+div.style.position = 'fixed';
+div.style.top = div.style.right = div.style.bottom = div.style.left = 0;
+div.style.background = 'radial-gradient(circle at 0 0, transparent, black)';
+document.body.appendChild(div);
 
 function getRandomColor(greyscale) {
   var c = ((1 << (greyscale ? 8 : 24)) * Math.random() | 0).toString(16);
@@ -214,6 +286,18 @@ function getRandomColor(greyscale) {
 
 window.addEventListener('click', function(e){
   if (e.target != colorSelect && e.target != fromSelect && e.target != typeSelect) input.focus();
+});
+
+window.addEventListener('mousemove', function(e){
+  var dx = -(e.clientX - stageW/2) * 10 / (stageW / 2);
+  var dy = -(e.clientY - stageH/2) * 10 / (stageH / 2);
+  fePointLight.setAttribute('x', e.clientX - stageW / 2);
+  fePointLight.setAttribute('y', e.clientY - stageH /2);
+  feOffset.setAttribute('dx', dx);
+  feOffset.setAttribute('dy', dy);
+  feGaussianBlur.setAttribute('stdDeviation', Math.max(Math.abs(dx),Math.abs(dy)));
+  // feColorMatrix.setAttribute('values', '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ' + (Math.abs(Math.max(Math.abs(dx),Math.abs(dy)) - 10) / 4) + ' 0');
+  div.style.background = 'radial-gradient(circle at ' + e.clientX + 'px ' + e.clientY + 'px, rgba(0,0,0,0), rgba(0,0,0,1))';
 });
 
 // Example
