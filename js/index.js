@@ -167,14 +167,6 @@ var Path = function() {
     return this.path;
   }
 
-  Path.prototype.light = function light(id) {
-    if (not(id)) {
-      console.log('Path.light: id is missing.');
-      return;
-    }
-    this.path.setAttribute('filter', 'url(#' + id + ')');
-  };
-
   return Path;
 }();
 
@@ -309,6 +301,7 @@ function typing(e){
             newPath.height = shapeH;
             newPath.style.opacity = 0;
             newPath.style.transform = 'translate(' + startX + 'px, ' + startY + 'px)';
+            if (light == 'true') newPath.setAttribute('filter', 'url(#lightText)');
 
           } else {
             newPath = document.getElementById(x + '-' + y);
