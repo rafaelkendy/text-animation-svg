@@ -66,6 +66,10 @@ var selects = [
       {
         'name': 'circle',
         'value': 'circle'
+      },
+      {
+        'name': 'square',
+        'value': 'square'
       }
     ],
     'func': function(){
@@ -77,7 +81,12 @@ var selects = [
           q1 = w1 * 0.06;
           q2 = w1 * 0.94;
           w = h = w1 * 2;
-        } else {
+        } else if(type == 'square') {
+          w1 = w2 = h1 = h2 = 5;
+          w = h = 10;
+          q1 = q2 = 10;
+        } 
+        else {
           w1 = Math.random() * c[p].width;
           w2 = Math.random() * c[p].width;
           h1 = Math.random() * c[p].height;
